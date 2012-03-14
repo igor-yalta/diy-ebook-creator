@@ -68,7 +68,7 @@ def get_mountpoint(request):
     return result
 
 def project_path():
-    return os.path.join(os.path.dirname(__file__),'projects')
+    return os.path.join(os.path.dirname(__file__),'wizard','projects')
 
 def create_project_dirs(cleaned_data):
     ''' create the project dirs, return True or False for validation '''
