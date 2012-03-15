@@ -17,5 +17,3 @@ This project was coded in python using Django and is intentionally cross-platfor
 
 A Windows Installer (.exe) version, which automates these installation steps, is also available via
    http://www.diybookscanner.org/forum/
-   
- 
