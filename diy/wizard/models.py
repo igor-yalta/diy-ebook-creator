@@ -21,13 +21,13 @@ class Project(models.Model):
     
 class Page(models.Model):
     card = models.CharField(max_length=10)
-    filepath = models.CharField(max_length=254)
     renamed = models.CharField(max_length=254)
     xfer_date = models.DateField()
     cleanup_split = models.CharField(max_length=100)
     cleanup_deskew = models.CharField(max_length=100)
     cleanup_margin = models.CharField(max_length=100)
     cleanup_content = models.CharField(max_length=100)
+    status = models.CharField(max_length=100)
     project = models.ForeignKey(Project)
     class Admin(admin.ModelAdmin):
         pass

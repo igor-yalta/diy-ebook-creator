@@ -14,9 +14,16 @@
 {% endblock %}
 
 {% block content %}
-<h3><span> ********** UNFINISHED PAGE ********** </span></h3>
-<p class="space-below">SCANTAILOR INTEGRATION WOULD PRESUMABLY BEGIN HERE. <br/>
-THANKS FOR USING THIS SOFTWARE! MORE TO COME LATER!
+<h3><span>{% trans 'Clean and convert' %}</span></h3>
+<p style="margin-left: 240px">
+{% trans ' ' %} <br/>
+	  <button id="step1" class="ui-button ui-button-text-only ui-widget ui-state-default ui-corner-all">
+	    <span id="start-processing" class="ui-button-text">{% trans 'Start!' %}</span>
+	  </button>
+	  </br> <br/> 
+
+</p>
+
 <br/>
 <br/>
 

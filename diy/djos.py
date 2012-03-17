@@ -86,7 +86,7 @@ def create_project_dirs(cleaned_data):
             return False
     return True
 
-def import_pages(Temp, src, dst, card='left'):
+def import_pages(Page, Temp, src, dst, card='left'):
     ''' copy and rename from card to computer '''
     import os
     import shutil
@@ -110,10 +110,12 @@ def import_pages(Temp, src, dst, card='left'):
         inc_by = 1
         
     for item in files:
+        #p  = Page(card=card,m=total).save() -- TODO
+         
         i = item.split('.')
         ext = i[-1] # -1 returns last part
         if ext.lower() in types:
-            ns = '%(#)04d' % {'#':n} # num as string
+            ns = '%(#)04d' % {'#':n} # n as string
             spath = src + os.sep + item
             renamed = ns + os.extsep + ext
             dpath = dst + os.sep + renamed
@@ -142,6 +144,18 @@ def import_pages(Temp, src, dst, card='left'):
     t = Temp.objects.all().delete() # delete temp entries
     return '[{"success": "Import succeeded"}]' # JSON syntax
 
+def call_abbyy():
+    import os
+    from subprocess import call
+    
+    f = []
+    for i in range(1,840):
+        n = '%(#)04d' % {'#':i} + '.jpg'
+        f.append(n)
+    
+    print f
+    
+    call(['c:/program files/ABBYY FineReader 10/finereader.exe']+f,cwd='c:/img')
 
 if __name__ == '__main__':
     drive = get_usb()

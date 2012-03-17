@@ -7,7 +7,7 @@ from django.core import serializers
 from distutils.sysconfig import get_python_lib
 import os, shutil, datetime
 import djos
-from models import Project, Temp
+from models import Project, Page, Temp
 from forms import ProjectForm
 
 def welcome(request):
@@ -95,7 +95,7 @@ def import_cmd(request):
     card             = request.GET['card']
     vars             = {}
     vars['template'] = 'content/import-cmd.html'
-    vars['output']   = djos.import_pages(Temp, src, dst, card)
+    vars['output']   = djos.import_pages(Page, Temp, src, dst, card)
     return HttpResponse(vars['output'])
 
 def import_cmd_is_valid(request):
