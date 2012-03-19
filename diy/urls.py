@@ -17,7 +17,11 @@ urlpatterns += patterns('diy.wizard.views',
     (r'^import-gui/',                   'import_gui'),
     (r'^import-cmd/',                   'import_cmd'),
     (r'^import-cmd-get-progress/',      'import_cmd_get_progress'),
+    (r'^import-cmd-cancel/',            'import_cmd_cancel'),
     (r'^import-cmd-is-valid/',          'import_cmd_is_valid'),
     (r'^scantailor/',                   'scantailor'),
+    (r'^batch-cmd/',                    'batch_cmd'),
+    (r'^batch-cmd-get-progress/',       'batch_cmd_get_progress'),
+    (r'^batch-cmd-cancel/',             'batch_cmd_cancel'),
 )
 urlpatterns += staticfiles_urlpatterns()

@@ -24,14 +24,13 @@
         <p class="error">{% trans 'Please correct the error' %} {{ form.errors|pluralize }} {% trans 'below.' %} </p>
     {% endif %}
 
-<h3><span>{% trans 'Project details' %}</span></h3>
-<p>{% trans 'What is the name of this project? This project (e.g. German Grammar) will be stored inside the location.' %}
-
-
 <div id="dialog-confirm" class="hidden" title="{% trans 'Are you sure?' %}">
 	<p><span class="ui-icon ui-icon-alert" style="margin:0 7px 20px 0;"></span>{% trans 'Please confirm your selections. If you later return to this page and change your answers, please note that this program will not delete the previously created folder(s).' %}</p>
 </div>
-	
+
+<h3><span>{% trans 'Project details' %}</span></h3>
+<p>{% trans 'What is the name of this project? This project (e.g. German Grammar) will be stored inside the location.' %}
+
 	<form id="jqueryForm" method="post" action=""> 
 		<table class="form">
 		<tr>
