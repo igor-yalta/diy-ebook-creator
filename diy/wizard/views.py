@@ -89,13 +89,16 @@ def import_gui(request):
     return render_to_response(vars['template'], {'form': form, 'vars': vars})
 
 def import_cmd(request):
+    t                = Temp.objects.all().delete() # in case cancel clicked after successful import
     src              = request.GET['src'] # intentionally cause error if not provided
     src              = src.replace('%3A',':').replace('%5C','\\').replace('%2F','/')
     dst              = request.session['fullpath']
     card             = request.GET['card']
+    title            = title=request.session['title']
+    p                = Project.objects.get(title=request.session['title'])
     vars             = {}
     vars['template'] = 'content/import-cmd.html'
-    vars['output']   = djos.import_pages(Page, Temp, src, dst, card)
+    vars['output']   = djos.import_pages(p, Page, Temp, src, dst, card)
     return HttpResponse(vars['output'])
 
 def import_cmd_is_valid(request):
@@ -122,7 +125,15 @@ def import_cmd_get_progress(request):
     vars             = {}
     vars['template'] = 'content/import-cmd-get-progress.html'
     vars['output']    = serializers.serialize('json', Temp.objects.all())
-    return HttpResponse(vars['output']) #render_to_response(vars['template'], {'vars': vars})
+    return HttpResponse(vars['output'])
+ 
+def import_cmd_cancel(request):
+    vars             = {}
+    t = Temp.objects.all().delete()
+    t  = Temp(p='cancel').save()
+    vars['template'] = 'content/import-cmd-cancel.html'
+    vars['output']    = serializers.serialize('json', Temp.objects.all())
+    return HttpResponse(vars['output'])
 
 def scantailor(request):
     vars = {}
@@ -134,3 +145,26 @@ def scantailor(request):
     #vars['debug']    = True
     form             = []
     return render_to_response(vars['template'], {'form': form, 'vars': vars})
+
+def batch_cmd(request):
+    t                = Temp.objects.all().delete() # in case cancel clicked after successful processing
+    path             = request.session['fullpath']
+    p                = Project.objects.get(title=request.session['title'])
+    vars             = {}
+    vars['template'] = 'content/scantailor-cmd.html'
+    vars['output']   = djos.run_batch(Temp, Page, p, path)
+    return HttpResponse(vars['output'])
+
+def batch_cmd_get_progress(request):
+    vars             = {}
+    vars['template'] = 'content/batch-cmd-get-progress.html'
+    vars['output']    = serializers.serialize('json', Temp.objects.all())
+    return HttpResponse(vars['output'])
+
+def batch_cmd_cancel(request):
+    vars             = {}
+    t = Temp.objects.all().delete()
+    t  = Temp(p='cancel').save()
+    vars['template'] = 'content/batch-cmd-cancel.html'
+    vars['output']    = serializers.serialize('json', Temp.objects.all())
+    return HttpResponse(vars['output'])

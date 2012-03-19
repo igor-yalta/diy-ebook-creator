@@ -1,0 +1,67 @@
+Scantailor-cli notes
+
+scantailor-cli -v --layout=1 --orientation=right --dpi=400 --output-dpi=600 --color-mode=mixed --white-margins=true --normalize-illumination=true --threshold=1 --output-project="B:\Git\home\seanw\diyebc\diy\wizard\projects\German Grammar\scantailor\st.ScanTailor" "B:\Git\home\seanw\diyebc\diy\wizard\projects\German Grammar\*.jpg" "B:\Git\home\seanw\diyebc\diy\wizard\projects\German Grammar\scantailor" 
+
+notes:
+   add to db: layout=1 if clicked Left or Right
+
+Scan Tailor is a post-processing tool for scanned pages.
+Version: 0.9.11.1
+
+ScanTailor usage: 
+	1) scantailor
+	2) scantailor <project_file>
+	3) scantailor-cli [options] <image, image, ...> <output_directory>
+	4) scantailor-cli [options] <project_file> [output_directory]
+
+1)start ScanTailor's GUI interface
+2)start ScanTailor's GUI interface and load project file
+3)batch processing images from command line; no GUI
+4)batch processing project from command line; no GUI
+	if output_directory is specified as last argument, it overwrites the one in project file
+
+Options:
+	--help, -h
+	--verbose, -v
+	--layout=, -l=<0|1|1.5|2>		-- default: 0
+			  0: auto detect
+			  1: one page layout
+			1.5: one page layout but cutting is needed
+			  2: two page layout
+	--layout-direction=, -ld=<lr|rl>	-- default: lr
+	--orientation=<left|right|upsidedown|none>
+						-- default: none
+	--rotate=<0.0...360.0>			-- it also sets deskew to manual mode
+	--deskew=<auto|manual>			-- default: auto
+	--content-detection=<cautious|normal|aggressive>
+						-- default: normal
+	--content-box=<<left_offset>x<top_offset>:<width>x<height>>
+						-- if set the content detection is se to manual mode
+						   example: --content-box=100x100:1500x2500
+	--margins=<number>			-- sets left, top, right and bottom margins to same number.
+		--margins-left=<number>
+		--margins-right=<number>
+		--margins-top=<number>
+		--margins-bottom=<number>
+	--alignment=center			-- sets vertical and horizontal alignment to center
+		--alignment-vertical=<top|center|bottom>
+		--alignment-horizontal=<left|center|right>
+	--dpi=<number>				-- sets x and y dpi. default: 600
+		--dpi-x=<number>
+		--dpi-y=<number>
+	--output-dpi=<number>			-- sets x and y output dpi. default: 600
+		--output-dpi-x=<number>
+		--output-dpi-y=<number>
+	--color-mode=<black_and_white|color_grayscale|mixed>
+						-- default: black_and_white
+	--white-margins				-- default: false
+	--normalize-illumination		-- default: false
+	--threshold=<n>				-- n<0 thinner, n>0 thicker; default: 0
+	--despeckle=<off|cautious|normal|aggressive>
+						-- default: normal
+	--dewarping=<off|auto>			-- default: off
+	--depth-perception=<1.0...3.0>		-- default: 2.0
+	--start-filter=<1...6>			-- default: 4
+	--end-filter=<1...6>			-- default: 6
+	--output-project=, -o=<project_name>
+

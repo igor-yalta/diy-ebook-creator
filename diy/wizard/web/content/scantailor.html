@@ -2,6 +2,13 @@
 
 {% load i18n %}
 
+{% block jquery %} 
+<script type="text/javascript" src="/static/js/jquery-1.7.1.min.js"></script>
+<script type="text/javascript" src="/static/js/jquery-ui-1.8.18.custom.min.js"></script>
+<script type="text/javascript" src="/static/js/jquery.ui.dialog.js"></script>
+<script type="text/javascript" src="/static/js/jquery.diy.scantailor.js"></script>
+{% endblock %}
+
 {% block title %} Scantailor {% endblock %}
 
 {% block signpost %}
@@ -14,14 +21,26 @@
 {% endblock %}
 
 {% block content %}
+<div id="dialog-confirm" class="hidden" title="{% trans 'Are you sure?' %}">
+	<p><span class="ui-icon ui-icon-alert" style="margin:0 7px 20px 0;"></span>{% trans 'Are you sure? I will now process via Scantailor then pass the results to ABBYY.' %}</p>
+</div>
+
+<div id="dialog-progress" class="hidden" title="{% trans 'Import Pages' %}">
+	<p><span class="" style="margin:0 7px 20px 0;"></span>
+	 {% trans 'I am now batch processing your files.' %} </p> 
+	  <div id="progressbar"></div>
+	  <br/>
+	  <p id="progressbar-details"></p>
+</div>
+
+
 <h3><span>{% trans 'Clean and convert' %}</span></h3>
 <p style="margin-left: 240px">
 {% trans ' ' %} <br/>
-	  <button id="step1" class="ui-button ui-button-text-only ui-widget ui-state-default ui-corner-all">
-	    <span id="start-processing" class="ui-button-text">{% trans 'Start!' %}</span>
+	  <button id="start-processing" class="ui-button ui-button-text-only ui-widget ui-state-default ui-corner-all">
+	    <span class="ui-button-text">{% trans 'Start!' %}</span>
 	  </button>
 	  </br> <br/> 
-
 </p>
 
 <br/>
