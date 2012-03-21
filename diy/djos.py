@@ -143,7 +143,7 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
         t  = Temp(p='message',v='PLEASE WAIT -- Counting and enumerating your images...').save()
         files = os.listdir(src.replace('\\','/')) # eg 'e:/dcim'
     except:
-        return '[{"error": "This directory does not exist."}]' # JSON syntax
+        return '{"error": "This directory does not exist."}' # JSON syntax
     
     #delete entries for this card under this project before inserting below
     pgs = Page.objects.filter(card=card,project=p).delete()
@@ -161,7 +161,7 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
         n=1
         inc_by = 1
     else:
-        return '[{"error":"Your card is not left right or both!"}]'
+        return '{"error":"Your card is not left right or both!"}'
     
     for item in files:
         i = item.split('.')
@@ -178,7 +178,7 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
             pg = Page(card=card,renamed=renamed,status='xfer and rename',xfer_date=datetime.now(),project=p).save()
     
     if not len(tasks):
-        return '[{"error":"No images found!"}]'
+        return '{"error":"No images found!"}'
     
     total = len(tasks) 
     i     = 1
@@ -187,27 +187,27 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
         c = Temp.objects.filter(p='cancel')
         if c:
             t = Temp.objects.all().delete() 
-            return '[{"error":"Cancelled"}]'
+            return '{"error":"Cancelled"}'
 
         try:
             t = Temp.objects.all().delete() 
             p  = round((float(i)/float(total))*100) # percent complete
             t  = Temp(p=output,k=i,v=p,m=total).save()
             shutil.copy2(spath, dpath)
-            #sleep(.2)
+            #sleep(2)
             if i == total:
                 sleep(1) # allows second thread to see 100 percent complete
             i += 1
         except:
-            return '[{"error":"An error occurred during copying and renaming. Verify your projects folder exists."}]' # JSON syntax
+            return '{"error":"An error occurred during copying and renaming. Verify your projects folder exists."}' # JSON syntax
     t = Temp.objects.all().delete() # delete temp entries
-    return '[{"success": "Import succeeded"}]' # JSON syntax
+    return '{"success": "Import succeeded"}' # JSON syntax
 
 def run_batch(Temp, Page, p, path):
     try:
         bin = [get_apps()['scantailor-cli']]
     except:
-        return '[{"error": "scantailor could not be found"}]' # JSON
+        return '{"error": "scantailor could not be found"}' # JSON
     
     path_in = path
     path_out = os.path.join(path, 'scantailor')
@@ -266,7 +266,7 @@ def run_batch(Temp, Page, p, path):
         c = Temp.objects.filter(p='cancel')
         if c:
             t = Temp.objects.all().delete() 
-            return '[{"error":"Cancelled"}]'
+            return '{"error":"Cancelled"}'
 
         f = [pg.renamed]
         o = ['--orientation=' + pg.card]
@@ -284,7 +284,7 @@ def run_batch(Temp, Page, p, path):
     try:
         bin = [get_apps()['abbyy']]
     except:
-        return '[{"error": "abbyy could not be found"}]' 
+        return '{"error": "abbyy could not be found"}' 
 
     opts        = ['/send','acrobat']
     opts.append('/send acrobat')  
@@ -304,9 +304,9 @@ def run_batch(Temp, Page, p, path):
         percent  = round((float(i)/float(total))*100) # progress
         t = Temp(p=actions.pop(0), k=i, v=total, m=percent).save()
 
-        return '[{"success": "Scantailor and ABBYY succeeded"}]'
+        return '{"success": "Scantailor and ABBYY succeeded"}'
     except:
-        return '[{"error": "A problem occurred with ABBYY: bin=' + ' '.join(bin) + ' flist=' + ' '.join(flist) + ' opts=' + ' '.join(opts) +' cwd=' + ' '.join(path_out) + '"}]'
+        return '{"error": "A problem occurred with ABBYY: bin=' + ' '.join(bin) + ' flist=' + ' '.join(flist) + ' opts=' + ' '.join(opts) +' cwd=' + ' '.join(path_out) + '"}'
     
 #if __name__ == '__main__':
     #drive = get_usb()

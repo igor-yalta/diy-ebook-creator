@@ -1,20 +1,26 @@
 /* diy ebook creator jquery */
 
+$.ajaxSetup({ cache: false });
+
 var int;
+var temp;
 function progress() {
 	$.getJSON('/import-cmd-get-progress/', function(data) {
-		if (typeof data[0] === "undefined") {
+		temp = data;
+		console.log(data)
+		if (jQuery.isEmptyObject(data)) {
 			var percent = 0;
 		}
 		else {
+			console.log(data);
 			//$('div.ui-progressbar-value').css({'background-image': 'url(/static/img/pbar-ani.gif)'})
-			var percent = Number(data[0]['fields']['v']);
+			var percent = Number(data.fields.v);
 
 			$("#progressbar").progressbar({value: percent});
-			if (data[0]['fields']['p']=='message')
-				$('#progressbar-details').replaceWith('<p id="progressbar-details"> ' + data[0]['fields']['v'] + '</p>')
+			if (data.fields.p =='message')
+				$('#progressbar-details').html(data.fields.v)
 			else
-				$('#progressbar-details').replaceWith('<p id="progressbar-details">' + Number(data[0]['fields']['k']) + ' / ' + Number(data[0]['fields']['m']) + ' ( ' + percent + '% ) ' + '<br/>' + data[0]['fields']['p'] + '</p>')
+				$('#progressbar-details').html(Number(data.fields.k) + ' / ' + Number(data.fields.m) + ' ( ' + percent + '% ) ' + '<br/>' + data.fields.p)
 			if (percent == 100) {
 				percent = 0
 				clearInterval(int)
@@ -43,10 +49,10 @@ $(document).ready(function(){
 		$.getJSON("/import-cmd-is-valid/",
 				{src: $('#step3-directory').val(), card: "left",},
 				function(data) {
-					if (data[0]['error']) {
-						alert(data[0]['error'] + ' Please enter a valid photo folder.');
+					if (data.error) {
+						alert(data.error + ' Please enter a valid photo folder.');
 					}
-					else if (data[0]['success']) {
+					else if (data.success) {
 						$("#dialog-progress").dialog('open');
 						$.getJSON("/import-cmd/",{src: $('#step3-directory').val(), card: "left",})
 					    int=self.setInterval("progress()",100);						
@@ -60,10 +66,10 @@ $(document).ready(function(){
 		$.getJSON("/import-cmd-is-valid/",
 				{src: $('#step3-directory').val(), card: "right",},
 				function(data) {
-					if (data[0]['error']) {
-						alert(data[0]['error'] + ' Please enter a valid photo folder.');
+					if (data.error) {
+						alert(data.error + ' Please enter a valid photo folder.');
 					}
-					else if (data[0]['success']) {
+					else if (data.success) {
 						$("#dialog-progress").dialog('open');
 						$.getJSON("/import-cmd/",{src: $('#step3-directory').val(), card: "right",})
 					    int=self.setInterval("progress()",100);						
@@ -77,10 +83,10 @@ $(document).ready(function(){
 		$.getJSON("/import-cmd-is-valid/",
 				{src: $('#step3-directory').val(), card: "both",},
 				function(data) {
-					if (data[0]['error']) {
-						alert(data[0]['error'] + ' Please enter a valid photo folder.');
+					if (data.error) {
+						alert(data.error + ' Please enter a valid photo folder.');
 					}
-					else if (data[0]['success']) {
+					else if (data.success) {
 						$("#dialog-progress").dialog('open');
 						$.getJSON("/import-cmd/",{src: $('#step3-directory').val(), card: "both",})
 					    int=self.setInterval("progress()",100);						
