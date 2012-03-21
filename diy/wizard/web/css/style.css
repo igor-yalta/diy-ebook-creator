@@ -280,12 +280,17 @@ ul.errorlist {
 	font-size: 1.3em;
 }
 
-.error {
+.errorBar {
 	background-color: pink;
 	border: solid 1px red;
 	color: black;
 	margin: 0 0 3px 250px;
 	padding: 4px 5px;
+}
+
+.error {
+	color: red;
+	margin: 0 5px;
 }
 
 .inlineError {
@@ -379,33 +384,32 @@ ul.errorlist {
 }
 
 form {
-	margin-right: 170px;
+	margin-right: 0px;
+	margin-left: 250px;
 }
 
 form table  {
-	/* border: 1px solid black; */
-    table-layout: fixed;
-    width: 90%;
+    width: 100%;
+    border: solid 1px red;
 }
 
-form table th {
-    /* border: 1px solid black; */
-    overflow: hidden;
+ form table th {
     width: 10%;
     text-align: left;
-}
+} 
 
-form table td {
-    /* border: 1px solid black; */
+/* form table td {
+    border: 1px solid black;
     overflow: hidden;
     width: 80%;
-}
+} */
 
 form table td input {
-	width: 80%;
+	width: 100%;
 }
 
 #jqueryForm {
+	margin-top: 1em;
 	margin-bottom: 5em;
 }
 
@@ -467,4 +471,19 @@ form table td input {
 #progressbar-details-command {
 	margin-top: 1.5em;
 	font-size: 10px;
+}
+
+.inputText {
+	display: block;
+}
+
+.inputText input  {
+  width: 60%;
+  margin: 0 0 0 10px;
+}
+
+#jqueryForm label {
+	display: block;
+	float: left;
+	width: 10%;
 }
