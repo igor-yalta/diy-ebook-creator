@@ -21,7 +21,7 @@
 
 {% block content %}
 {% if form.errors %}
-        <p class="error">{% trans 'Please correct the error' %} {{ form.errors|pluralize }} {% trans 'below.' %} </p>
+        <p class="errorBar">{% trans 'Please correct the error' %} {{ form.errors|pluralize }} {% trans 'below.' %} </p>
     {% endif %}
 
 <div id="dialog-confirm" class="hidden" title="{% trans 'Are you sure?' %}">
@@ -29,42 +29,18 @@
 </div>
 
 <h3><span>{% trans 'Project details' %}</span></h3>
-<p>{% trans 'What is the name of this project? This project (e.g. German Grammar) will be stored inside the location.' %}
+<p>{% trans 'What is the name of this project? This project (e.g. German Grammar) will be stored inside the location.' %}</p>
 
-	<form id="jqueryForm" method="post" action=""> 
-		<table class="form">
-		<tr>
-			<th>Title</th>
-			<td>{{ form.title }}</td>
-			{% if form.title.errors %}
-			</tr>
-			<tr>
-				<td></td>
-				<td> {{ form.title.errors }}</td>
-			</tr>
-			{% endif %}
-		</tr>
-		<tr>
-			<th>{% trans 'Location' %}</th>
-			<td>{{ form.path }}</td>
-			{% if form.path.errors %}
-			</tr>
-			<tr>
-				<td></td>
-				<td> {{ form.path.errors }}</td>
-			</tr>
-			{% endif %}
-
-				
-		<tr class="hidden">
-			<th>Date created</th>
-			<td>{{ form.date_created }}</td>
-		</tr>
-		</table>
-
+	<form id="jqueryForm" method="post" action="">
+		<label for="title">{% trans ' Title' %}</label>
+		<span class="inputText">{{ form.title }} <span class="error"> {{ form.title.errors|striptags }} </span></span>
+		
+		<label for="location">{% trans 'Location' %}</label>
+		<span class="inputText">{{ form.path }} <span class="error"> {{ form.path.errors|striptags }} </span></span>
+		
+		<div class="hidden"><label for="location">{% trans 'Date Created' %}</label><span class="inputText">{{ form.date_created }}</span></div>
+	
 		<input class="hidden" type="submit" value="{% trans 'Submit' %}"/>
-			
-		</div>
     </form>
 {% endblock %}
 
