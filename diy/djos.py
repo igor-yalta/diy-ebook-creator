@@ -139,19 +139,26 @@ def create_project_dirs(cleaned_data):
 
 def import_pages(p, Page, Temp, src, dst, card='left'):
     ''' copy and rename from card to computer '''
+    
+    # clean up progress table
+    t = Temp.objects.all().delete()
     try:
-        t  = Temp(p='message',v='PLEASE WAIT -- Enumerating your images. The speed of this operation depends on image count, PC, and card(s), so please be patient!').save()
+        t  = Temp(p='message',k='notice', v='PLEASE WAIT -- Enumerating your images. The speed of this operation depends on image count, PC, and card(s), so please be patient!').save()
         files = os.listdir(src.replace('\\','/')) # eg 'e:/dcim'
     except:
+        t  = Temp(p='message',k='error', v='This directory does not exist.').save()
         return '{"error": "This directory does not exist."}' # JSON syntax
     
     #delete entries for this card under this project before inserting below
     pgs = Page.objects.filter(card=card,project=p).delete()
     
-    types = ('jpg', 'jpeg', 'tif', 'tiff', 'png', 'jp2')
-    inc_by = 2
     n = 0 # page number
     tasks  = []
+    inc_by = 2
+    types = ('jpg', 'jpeg', 'tif', 'tiff', 'png', 'jp2')
+    angles = {'right': 270, 'left': 90, 'both':0}
+    orientation = angles[card]
+
     
     if card == 'left':
         n=1
@@ -161,8 +168,10 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
         n=1
         inc_by = 1
     else:
+        t  = Temp(p='message',k='error', v='Your card is not left right or both!').save()
         return '{"error":"Your card is not left right or both!"}'
     
+    # list the commands
     for item in files:
         i = item.split('.')
         ext = i[-1] # -1 returns last part
@@ -178,21 +187,21 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
             pg = Page(card=card,renamed=renamed,status='xfer and rename',xfer_date=datetime.now(),project=p).save()
     
     if not len(tasks):
+        t  = Temp(p='message',k='error', v='No images found!').save()
         return '{"error":"No images found!"}'
 
-    angles = {'right': 270, 'left': 90, 'both':0}
-    orientation = angles[card]
-    
+    # excecute commands, show progress
     total = len(tasks) 
     i     = 1
     for spath, dpath, output, log in tasks:
         # cancelled?
         c = Temp.objects.filter(p='cancel')
         if c:
-            t = Temp.objects.all().delete() 
+            t = Temp.objects.all().delete()
+            t  = Temp(p='message',v='Cancelled!').save()
             return '{"error":"Cancelled"}'
         try:
-            t = Temp.objects.all().delete() 
+            t = Temp.objects.all().delete()            
             p  = round((float(i)/float(total))*100) # percent complete
             t  = Temp(p=output,k=i,v=p,m=total).save()
             shutil.copy2(spath, dpath)
@@ -201,21 +210,39 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
             im = Image.open(dpath)
             im.rotate(orientation).save(dpath)
         
-            #sleep(2)
             if i == total:
-                sleep(1) # allows second thread to see 100 percent complete
+                sleep(1) # allows progress thread to see 100 percent complete
             i += 1
         except:
-            return '{"error":"An error occurred during copying and renaming. Verify your projects folder exists."}' # JSON syntax
+            t  = Temp(p='message',k='error', v='An occurred during copying and renaming. Verify that your projects folder exists.').save()
+            return '{"error":"An error occurred during copying and renaming. Verify that your projects folder exists."}'
     t = Temp.objects.all().delete() # delete temp entries
-    return '{"success": "Import succeeded"}' # JSON syntax
+    return '{"success": "Import succeeded"}'
 
 def run_batch(Temp, Page, p, path):
+    # clean the progress table
+    t = Temp.objects.all().delete()
+    
+    # scantailor installed?
     try:
-        bin_cli = [get_apps()['scantailor-cli']]
         bin = [get_apps()['scantailor']]
     except:
-        return '{"error": "scantailor could not be found"}' # JSON
+        t  = Temp(p='message',k='error', v='Scantailor could not be found. Is it installed? Sorry, only Windows is supported currently. Please see the forums (link below) to help us fix this!').save()
+        return '{"error": "scantailor could not be found. Is it installed?"}'
+    
+    # scantailor-cli installed?
+    try:    
+        bin_cli = [get_apps()['scantailor-cli']]
+    except:
+        t  = Temp(p='message',k='error', v='Scantailor-cli (command line version) could not be found. Is it installed? Sorry, only Windows is supported currently. Please see the forums (link below) to help us fix this!').save()
+        return '{"error": "scantailor-cli (command line version) could not be found. Is it installed?"}'
+    
+    # abbyy installed?
+    try:
+        bin_abbyy = [get_apps()['abbyy']]
+    except:
+        t  = Temp(p='message',k='error', v='ABBYY FineReader could not be found. Is it installed? Sorry, only Windows is supported currently. Please see the forums (link below) to help us fix this!').save()
+        return '{"error": "ABBYY FineReader could not be found. Is it installed?"}' 
     
     path_in = path
     path_out = os.path.join(path, 'scantailor')
@@ -224,12 +251,17 @@ def run_batch(Temp, Page, p, path):
     fn = 'project.ScanTailor'
     ppath = [os.path.join(path_out,fn)] # project path
     
-    #try creating dest
-    try:
-        os.makedirs(path_out, 0777)
-    except:
-        pass
+    # try creating dest
+    if os.path.exists(path_out):
+        pass # if re-running this script
+    else:
+        try:
+            os.makedirs(path_out, 0777)
+        except:
+            t  = Temp(p='message', k='error', v='I could not create the directory you requested. Does it already exist? That directory was: ' + path_out + '. Please try again.').save()
+            return '{"error": "I could not create the directory you requested. Does it already exist? Please try again"}'
     
+    # scantailor options
     opts = ['-v']
     opts.append('--layout=1')
     opts.append('--dpi=400')
@@ -245,12 +277,10 @@ def run_batch(Temp, Page, p, path):
     opts.append('--margins-right=10')
     opts.append('--alignment-vertical=center')
     opts.append('--alignment-horizontal=center')
-    opts.append('-o=scantailor/project.ScanTailor')
-    
-    #options.append('--output-project=/somewhere') 
-    
+    opts.append('-o=scantailor/project.ScanTailor') # project
+
+    # get files and their paths    
     pgs = Page.objects.filter(project=p).order_by('renamed')
-    
     flist_in  = [x.renamed for x in pgs] # 0001.jpg, 0002.jpg, ...
     flist_out = [os.path.splitext(x.renamed)[0] + os.extsep + 'tif' for x in pgs] # 0001.tif, 0002.tif, ...
         
@@ -265,70 +295,34 @@ def run_batch(Temp, Page, p, path):
     # BROKEN!? # opts2 = ['--content-box=100x100:2100x3900', '--alignment-vertical=top', '--alignment-horizontal=left']
     #command = ' '.join(flist_in).replace('\\','/')
     
-    # scantailor_cli
+    # prepare
+    tasks    = ['Run Scantailor_cli', 'OCR using ABBYY', 'ABBYY processed your file successfully.']
+    total    = len(pgs) + len(tasks)
+    i        = len(tasks.pop(0))
+    percent  = round((float(i)/float(total))*100) # progress
+    t        = Temp(p=tasks.pop(0), k=i, v=total, m=percent).save()
+                
+    # run scantailor_cli
     try:
-        cmd = bin_cli + opts + flist_in + [path_out] 
-        call(cmd,cwd=path_in) # process
+        cmd = bin_cli + opts + flist_in + [path_out]
+        #call(cmd,cwd=path_in) # process
+        
     except:
+        t  = Temp(p='message',k='error', v='Something broke trying to open the Scantailor-cli (command line version) application. Command was "' + ' '.join(cmd))
         return "{'error': 'something broke during scantailor processing. sorry.'}"
     
-    # scantailor GUI
+    # run scantailor GUI
     try:
-        call(bin + ppath) # open result
+        pass #call(bin + ppath) # open result
     except:
+        t  = Temp(p='message',k='error', v='Something broke trying to open the scantailor application. Command was "' + ' '.join(bin + ppath))
         return "{'error': 'something broke trying to the open the scantailor application'}"
 
-    actions = ['OCR using ABBYY', 'ABBYY processed your file successfully.']
-    total = len(pgs) + len(actions)
-    i = 1
-    for pg in pgs:
-        # cancelled?
-        c = Temp.objects.filter(p='cancel')
-        if c:
-            t = Temp.objects.all().delete() 
-            return '{"error":"Cancelled"}'
-
-        f = [pg.renamed]
-        #o = ['--orientation=' + pg.card]
-        
-        # update status in db 
-        pgs = Temp.objects.all().delete()
-        percent  = round((float(i)/float(total))*100) # progress
-        cmd = bin + opts + flist_in + [path_out]
-        cmd_str = 'File: ' + f[0] + '<br/><br/>  <span id="progressbar-details-command"> Command: ' + ' '.join(cmd) + '</span><br/>'
-        t = Temp(p=cmd_str, k=i, v=total, m=percent).save()
-        i += 1
-    
     # now abbyy
     try:
-        bin = [get_apps()['abbyy']]
+        opts = ['/send','acrobat']
+        cmd  = bin_abbyy + flist_out + opts
+        call(cmd, cwd=path_out)
     except:
-        return '{"error": "abbyy could not be found"}' 
-
-    opts        = ['/send','acrobat']
-    opts.append('/send acrobat')  
-    cmd = bin + flist_out + opts
-    
-    #update progress
-    pgs = Temp.objects.all().delete()
-    percent  = round((float(i)/float(total))*100) # progress
-    t = Temp(p=actions.pop(0), k=i, v=total, m=percent).save()
-    
-    try:
-        call(cmd,cwd=path_out)
-    
-        #update progress    
-        i += 1
-        pgs = Temp.objects.all().delete()
-        percent  = round((float(i)/float(total))*100) # progress
-        t = Temp(p=actions.pop(0), k=i, v=total, m=percent).save()
-
-        return '{"success": "Scantailor and ABBYY succeeded"}'
-    except:
-        return '{"error": "A problem occurred with ABBYY: bin=' + ' '.join(bin) + ' flist=' + ' '.join(flist) + ' opts=' + ' '.join(opts) +' cwd=' + ' '.join(path_out) + '"}'
-    
-#if __name__ == '__main__':
-    #drive = get_usb()
-    #print drive
-    
-    
+        t  = Temp(p='message',k='error', v='I could not run ABBYY. The command was probably incorrect. It was "' + ' '.join(cmd))
+        return '{"error": "I could not run ABBYY. The command was probably incorrect. It was "' + ' '.join(cmd) + '}'
