@@ -20,6 +20,7 @@
 {% endblock %}
 
 {% block content %}
+
 {% if form.errors %}
         <p class="errorBar">{% trans 'Please correct the error' %} {{ form.errors|pluralize }} {% trans 'below.' %} </p>
     {% endif %}

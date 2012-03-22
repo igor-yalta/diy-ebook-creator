@@ -140,7 +140,7 @@ def create_project_dirs(cleaned_data):
 def import_pages(p, Page, Temp, src, dst, card='left'):
     ''' copy and rename from card to computer '''
     try:
-        t  = Temp(p='message',v='PLEASE WAIT -- Counting and enumerating your images...').save()
+        t  = Temp(p='message',v='PLEASE WAIT -- Enumerating your images. The speed of this operation depends on image count, PC, and card(s), so please be patient!').save()
         files = os.listdir(src.replace('\\','/')) # eg 'e:/dcim'
     except:
         return '{"error": "This directory does not exist."}' # JSON syntax

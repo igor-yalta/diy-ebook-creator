@@ -16,7 +16,7 @@ html {
 body { 
 	font: 75% georgia, sans-serif;
 	/* line-height: 1;  1.88889;*/
-	line-height: 1.2em;
+	line-height: 1.3em;
 	color: #555753; 
 	/* background: #fff url(blossoms.jpg) no-repeat bottom right; */ 
 	margin: 0; 
@@ -466,6 +466,7 @@ form table td input {
 
 #progressbar-details {
 	text-align: center;
+	line-height: 1.8em;
 }
 
 #progressbar-details-command {
