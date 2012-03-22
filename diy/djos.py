@@ -6,7 +6,7 @@ import os
 import shutil
 from datetime import datetime
 from subprocess import call    
-
+from PIL import Image
 
 def is_scantailor():
     ''' 
@@ -179,6 +179,9 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
     
     if not len(tasks):
         return '{"error":"No images found!"}'
+
+    angles = {'right': 270, 'left': 90, 'both':0}
+    orientation = angles[card]
     
     total = len(tasks) 
     i     = 1
@@ -188,12 +191,16 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
         if c:
             t = Temp.objects.all().delete() 
             return '{"error":"Cancelled"}'
-
         try:
             t = Temp.objects.all().delete() 
             p  = round((float(i)/float(total))*100) # percent complete
             t  = Temp(p=output,k=i,v=p,m=total).save()
             shutil.copy2(spath, dpath)
+         
+            #rotate   
+            im = Image.open(dpath)
+            im.rotate(orientation).save(dpath)
+        
             #sleep(2)
             if i == total:
                 sleep(1) # allows second thread to see 100 percent complete
@@ -205,7 +212,8 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
 
 def run_batch(Temp, Page, p, path):
     try:
-        bin = [get_apps()['scantailor-cli']]
+        bin_cli = [get_apps()['scantailor-cli']]
+        bin = [get_apps()['scantailor']]
     except:
         return '{"error": "scantailor could not be found"}' # JSON
     
@@ -213,6 +221,8 @@ def run_batch(Temp, Page, p, path):
     path_out = os.path.join(path, 'scantailor')
     flist_in = []  # eg jpgs
     flist_out = [] # eg tifs
+    fn = 'project.ScanTailor'
+    ppath = [os.path.join(path_out,fn)] # project path
     
     #try creating dest
     try:
@@ -235,7 +245,7 @@ def run_batch(Temp, Page, p, path):
     opts.append('--margins-right=10')
     opts.append('--alignment-vertical=center')
     opts.append('--alignment-horizontal=center')
-    opts.append('-o=project.ScanTailor')
+    opts.append('-o=scantailor/project.ScanTailor')
     
     #options.append('--output-project=/somewhere') 
     
@@ -252,11 +262,21 @@ def run_batch(Temp, Page, p, path):
         flist_out.pop(-1)
 
     #select content of first and last pages
-    opts2 = ['--content-box=100x100:2100x3900', '--alignment-vertical=top', '--alignment-horizontal=left']
-    cmd = bin + opts2 + [flist_in[0]] + [path_out]
-    call(cmd,cwd=path_in)
-
-    return
+    # BROKEN!? # opts2 = ['--content-box=100x100:2100x3900', '--alignment-vertical=top', '--alignment-horizontal=left']
+    #command = ' '.join(flist_in).replace('\\','/')
+    
+    # scantailor_cli
+    try:
+        cmd = bin_cli + opts + flist_in + [path_out] 
+        call(cmd,cwd=path_in) # process
+    except:
+        return "{'error': 'something broke during scantailor processing. sorry.'}"
+    
+    # scantailor GUI
+    try:
+        call(bin + ppath) # open result
+    except:
+        return "{'error': 'something broke trying to the open the scantailor application'}"
 
     actions = ['OCR using ABBYY', 'ABBYY processed your file successfully.']
     total = len(pgs) + len(actions)
@@ -269,16 +289,15 @@ def run_batch(Temp, Page, p, path):
             return '{"error":"Cancelled"}'
 
         f = [pg.renamed]
-        o = ['--orientation=' + pg.card]
+        #o = ['--orientation=' + pg.card]
         
         # update status in db 
         pgs = Temp.objects.all().delete()
         percent  = round((float(i)/float(total))*100) # progress
-        cmd = bin + opts + o + flist_in + [path_out]
+        cmd = bin + opts + flist_in + [path_out]
         cmd_str = 'File: ' + f[0] + '<br/><br/>  <span id="progressbar-details-command"> Command: ' + ' '.join(cmd) + '</span><br/>'
         t = Temp(p=cmd_str, k=i, v=total, m=percent).save()
         i += 1
-    call(cmd,cwd=path_in)
     
     # now abbyy
     try:

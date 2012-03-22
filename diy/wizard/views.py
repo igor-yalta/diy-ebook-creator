@@ -126,7 +126,7 @@ def import_cmd_get_progress(request):
     vars             = {}
     vars['template'] = 'content/import-cmd-get-progress.html'
     vars['output'] = serializers.serialize('json', Temp.objects.filter(pk=1))[1:-1] or '{}'
-    response = HttpResponse(vars.get('output','{}')) #,mimetype='application/json; charset=utf8')
+    response = HttpResponse(vars['output']) # why can't IE do the following? mimetype='application/json; charset=utf8')
     response['Cache-Control'] = 'no-cache' # IE - https://docs.djangoproject.com/en/dev/ref/request-response/
     return response
  
@@ -136,7 +136,7 @@ def import_cmd_cancel(request):
     t  = Temp(p='cancel').save()
     vars['template'] = 'content/import-cmd-cancel.html'
     vars['output'] = serializers.serialize('json', Temp.objects.filter(pk=1))[1:-1] or '{}'
-    response = HttpResponse(vars['output'],mimetype='application/json; charset=utf8')
+    response = HttpResponse(vars['output']) # why can't IE do the following? mimetype='application/json; charset=utf8')
     response['Cache-Control'] = 'no-cache'
     return response
 
@@ -163,13 +163,17 @@ def batch_cmd(request):
 def batch_cmd_get_progress(request):
     vars             = {}
     vars['template'] = 'content/batch-cmd-get-progress.html'
-    vars['output']    = serializers.serialize('json', Temp.objects.all())
-    return HttpResponse(vars['output'])
+    vars['output'] = serializers.serialize('json', Temp.objects.filter(pk=1))[1:-1] or '{}'
+    response = HttpResponse(vars['output']) # why can't IE do the following? mimetype='application/json; charset=utf8')
+    response['Cache-Control'] = 'no-cache' # IE
+    return response
 
 def batch_cmd_cancel(request):
     vars             = {}
     t = Temp.objects.all().delete()
     t  = Temp(p='cancel').save()
     vars['template'] = 'content/batch-cmd-cancel.html'
-    vars['output']    = serializers.serialize('json', Temp.objects.all())
-    return HttpResponse(vars['output'])
+    vars['output'] = serializers.serialize('json', Temp.objects.filter(pk=1))[1:-1] or '{}'
+    response = HttpResponse(vars['output']) # why can't IE do the following? mimetype='application/json; charset=utf8')
+    response['Cache-Control'] = 'no-cache' # IE
+    return response
