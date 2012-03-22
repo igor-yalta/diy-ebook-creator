@@ -9,6 +9,7 @@ import os, shutil, datetime
 import djos
 from models import Project, Page, Temp
 from forms import ProjectForm
+from django.utils import simplejson
 
 def welcome(request):
     vars = {}
@@ -114,26 +115,30 @@ def import_cmd_is_valid(request):
             if ext.lower() in types:
                 photos = True
         if photos:
-            return HttpResponse('[{"success": "Valid path."}]') # JSON syntax
+            return HttpResponse('{"success": "Valid path."}') # JSON syntax
         else:
-            return HttpResponse('[{"error": "No images found."}]') # JSON syntax
+            return HttpResponse('{"error": "No images found."}') # JSON syntax
     except:
-        result = '[{"error": "This directory does not exist."}]' # JSON syntax
+        result = '{"error": "This directory does not exist."}' # JSON syntax
     return HttpResponse(result)
     
 def import_cmd_get_progress(request):
     vars             = {}
     vars['template'] = 'content/import-cmd-get-progress.html'
-    vars['output']    = serializers.serialize('json', Temp.objects.all())
-    return HttpResponse(vars['output'])
+    vars['output'] = serializers.serialize('json', Temp.objects.filter(pk=1))[1:-1] or '{}'
+    response = HttpResponse(vars.get('output','{}')) #,mimetype='application/json; charset=utf8')
+    response['Cache-Control'] = 'no-cache' # IE - https://docs.djangoproject.com/en/dev/ref/request-response/
+    return response
  
 def import_cmd_cancel(request):
     vars             = {}
     t = Temp.objects.all().delete()
     t  = Temp(p='cancel').save()
     vars['template'] = 'content/import-cmd-cancel.html'
-    vars['output']    = serializers.serialize('json', Temp.objects.all())
-    return HttpResponse(vars['output'])
+    vars['output'] = serializers.serialize('json', Temp.objects.filter(pk=1))[1:-1] or '{}'
+    response = HttpResponse(vars['output'],mimetype='application/json; charset=utf8')
+    response['Cache-Control'] = 'no-cache'
+    return response
 
 def scantailor(request):
     vars = {}

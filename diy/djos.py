@@ -140,10 +140,10 @@ def create_project_dirs(cleaned_data):
 def import_pages(p, Page, Temp, src, dst, card='left'):
     ''' copy and rename from card to computer '''
     try:
-        t  = Temp(p='message',v='PLEASE WAIT -- Counting and enumerating your images...').save()
+        t  = Temp(p='message',v='PLEASE WAIT -- Enumerating your images. The speed of this operation depends on image count, PC, and card(s), so please be patient!').save()
         files = os.listdir(src.replace('\\','/')) # eg 'e:/dcim'
     except:
-        return '[{"error": "This directory does not exist."}]' # JSON syntax
+        return '{"error": "This directory does not exist."}' # JSON syntax
     
     #delete entries for this card under this project before inserting below
     pgs = Page.objects.filter(card=card,project=p).delete()
@@ -161,7 +161,7 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
         n=1
         inc_by = 1
     else:
-        return '[{"error":"Your card is not left right or both!"}]'
+        return '{"error":"Your card is not left right or both!"}'
     
     for item in files:
         i = item.split('.')
@@ -178,7 +178,7 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
             pg = Page(card=card,renamed=renamed,status='xfer and rename',xfer_date=datetime.now(),project=p).save()
     
     if not len(tasks):
-        return '[{"error":"No images found!"}]'
+        return '{"error":"No images found!"}'
     
     total = len(tasks) 
     i     = 1
@@ -187,31 +187,32 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
         c = Temp.objects.filter(p='cancel')
         if c:
             t = Temp.objects.all().delete() 
-            return '[{"error":"Cancelled"}]'
+            return '{"error":"Cancelled"}'
 
         try:
             t = Temp.objects.all().delete() 
             p  = round((float(i)/float(total))*100) # percent complete
             t  = Temp(p=output,k=i,v=p,m=total).save()
             shutil.copy2(spath, dpath)
-            #sleep(.2)
+            #sleep(2)
             if i == total:
                 sleep(1) # allows second thread to see 100 percent complete
             i += 1
         except:
-            return '[{"error":"An error occurred during copying and renaming. Verify your projects folder exists."}]' # JSON syntax
+            return '{"error":"An error occurred during copying and renaming. Verify your projects folder exists."}' # JSON syntax
     t = Temp.objects.all().delete() # delete temp entries
-    return '[{"success": "Import succeeded"}]' # JSON syntax
+    return '{"success": "Import succeeded"}' # JSON syntax
 
 def run_batch(Temp, Page, p, path):
     try:
         bin = [get_apps()['scantailor-cli']]
     except:
-        return '[{"error": "scantailor could not be found"}]' # JSON
+        return '{"error": "scantailor could not be found"}' # JSON
     
     path_in = path
     path_out = os.path.join(path, 'scantailor')
-    flist = [] # file list
+    flist_in = []  # eg jpgs
+    flist_out = [] # eg tifs
     
     #try creating dest
     try:
@@ -234,12 +235,29 @@ def run_batch(Temp, Page, p, path):
     opts.append('--margins-right=10')
     opts.append('--alignment-vertical=center')
     opts.append('--alignment-horizontal=center')
+    opts.append('-o=project.ScanTailor')
     
     #options.append('--output-project=/somewhere') 
     
     pgs = Page.objects.filter(project=p).order_by('renamed')
-    flist = [os.path.splitext(x.renamed)[0] + os.extsep + 'tif' for x in pgs] # 0001.jpg becomes 0001.tif
     
+    flist_in  = [x.renamed for x in pgs] # 0001.jpg, 0002.jpg, ...
+    flist_out = [os.path.splitext(x.renamed)[0] + os.extsep + 'tif' for x in pgs] # 0001.tif, 0002.tif, ...
+        
+    # if using L and R cards, delete first and last pages, which are probably blanks in dual rigs
+    if pgs[0].card!='both':
+        flist_in.pop(0)
+        flist_in.pop(-1)
+        flist_out.pop(0)
+        flist_out.pop(-1)
+
+    #select content of first and last pages
+    opts2 = ['--content-box=100x100:2100x3900', '--alignment-vertical=top', '--alignment-horizontal=left']
+    cmd = bin + opts2 + [flist_in[0]] + [path_out]
+    call(cmd,cwd=path_in)
+
+    return
+
     actions = ['OCR using ABBYY', 'ABBYY processed your file successfully.']
     total = len(pgs) + len(actions)
     i = 1
@@ -248,7 +266,7 @@ def run_batch(Temp, Page, p, path):
         c = Temp.objects.filter(p='cancel')
         if c:
             t = Temp.objects.all().delete() 
-            return '[{"error":"Cancelled"}]'
+            return '{"error":"Cancelled"}'
 
         f = [pg.renamed]
         o = ['--orientation=' + pg.card]
@@ -256,22 +274,21 @@ def run_batch(Temp, Page, p, path):
         # update status in db 
         pgs = Temp.objects.all().delete()
         percent  = round((float(i)/float(total))*100) # progress
-        cmd = bin + opts + o + f + [path_out]
+        cmd = bin + opts + o + flist_in + [path_out]
         cmd_str = 'File: ' + f[0] + '<br/><br/>  <span id="progressbar-details-command"> Command: ' + ' '.join(cmd) + '</span><br/>'
         t = Temp(p=cmd_str, k=i, v=total, m=percent).save()
-        
-        call(cmd,cwd=path_in)
         i += 1
+    call(cmd,cwd=path_in)
     
     # now abbyy
     try:
         bin = [get_apps()['abbyy']]
     except:
-        return '[{"error": "abbyy could not be found"}]' 
+        return '{"error": "abbyy could not be found"}' 
 
     opts        = ['/send','acrobat']
-    #opts.append('/send acrobat')  
-    cmd = bin + flist + opts
+    opts.append('/send acrobat')  
+    cmd = bin + flist_out + opts
     
     #update progress
     pgs = Temp.objects.all().delete()
@@ -287,9 +304,9 @@ def run_batch(Temp, Page, p, path):
         percent  = round((float(i)/float(total))*100) # progress
         t = Temp(p=actions.pop(0), k=i, v=total, m=percent).save()
 
-        return '[{"success": "Scantailor and ABBYY succeeded"}]'
+        return '{"success": "Scantailor and ABBYY succeeded"}'
     except:
-        return '[{"error": "A problem occurred with ABBYY: bin=' + ' '.join(bin) + ' flist=' + ' '.join(flist) + ' opts=' + ' '.join(opts) +' cwd=' + ' '.join(path_out) + '"}]'
+        return '{"error": "A problem occurred with ABBYY: bin=' + ' '.join(bin) + ' flist=' + ' '.join(flist) + ' opts=' + ' '.join(opts) +' cwd=' + ' '.join(path_out) + '"}'
     
 #if __name__ == '__main__':
     #drive = get_usb()
