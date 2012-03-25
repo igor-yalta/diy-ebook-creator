@@ -163,7 +163,9 @@ def batch_cmd(request):
 def batch_cmd_get_progress(request):
     vars             = {}
     vars['template'] = 'content/batch-cmd-get-progress.html'
-    vars['output'] = serializers.serialize('json', Temp.objects.filter(pk=1))[1:-1] or '{}'
+    proj             = Project.objects.get(title=request.session['title'])
+    path             = os.path.join(request.session['fullpath'], 'scantailor')
+    vars['output']   = djos.batch_progress(proj, path, Temp, Page)
     response = HttpResponse(vars['output']) # why can't IE do the following? mimetype='application/json; charset=utf8')
     response['Cache-Control'] = 'no-cache' # IE
     return response

@@ -1,4 +1,5 @@
 from django.contrib.staticfiles.urls import staticfiles_urlpatterns
+from django.conf import settings
 from django.conf.urls.defaults import *
 from django.views.generic import list_detail
 
@@ -25,3 +26,9 @@ urlpatterns += patterns('diy.wizard.views',
     (r'^batch-cmd-cancel/',             'batch_cmd_cancel'),
 )
 urlpatterns += staticfiles_urlpatterns()
+
+# to load TIF's -- http://stackoverflow.com/questions/5517950/django-media-url-and-media-root
+urlpatterns += patterns('',
+        (r'^root/(?P<path>.*)$', 'django.views.static.serve', {
+        'document_root': settings.MEDIA_ROOT,
+        'show_indexes': True}))

@@ -7,6 +7,7 @@ import shutil
 from datetime import datetime
 from subprocess import call    
 from PIL import Image
+import json
 
 def is_scantailor():
     ''' 
@@ -296,24 +297,42 @@ def run_batch(Temp, Page, p, path):
     #command = ' '.join(flist_in).replace('\\','/')
     
     # prepare
-    tasks    = ['Run Scantailor_cli', 'OCR using ABBYY', 'ABBYY processed your file successfully.']
-    total    = len(pgs) + len(tasks)
-    i        = len(tasks.pop(0))
-    percent  = round((float(i)/float(total))*100) # progress
-    t        = Temp(p=tasks.pop(0), k=i, v=total, m=percent).save()
+    msg      = 'Please wait. Scantailor-cli may take a long time before generating the first TIFs. This is normal.'
+    total    = len(flist_in) + 3
+    percent  = 0 
+    step     = 0
+    t         = Temp(p=msg, k=step, v=percent, m=total, o='start', o2=json.dumps([None])).save()
+
+    #delete this
+    #pagecount = len(Page.objects.filter(project=p).order_by('renamed'))
+    #taskcount = len(['Scantailor-CLI', 'Scantailor Manual Adjustments', 'Send to ABBYY Finereader'])
+    #adjustments = {'left': 2, 'right': 2, 'both': 0}
+    #adjust = adjustments[card]
+    #total = pagecount - adjust + taskcount 
+    #msg = 'Please wait. Scantailor-cli takes a little while to generate the first TIFs. Then, it creates a bunch at once, followed by more regular output.' 
+    #t  = Temp(p=msg, k=0, v=0, m=total, o='start', o2=json.dumps([None])).save()
                 
     # run scantailor_cli
     try:
         cmd = bin_cli + opts + flist_in + [path_out]
-        #call(cmd,cwd=path_in) # process
-        
+        call(cmd,cwd=path_in) # process
+        sleep(4) # without sleeping, below msg won't appear. why?
+        t = Temp.objects.get(o='last')
+        t.k = int(t.k)+1
+        t.p = 'Scantailor-CLI completed successfully. I opened Scantailor. Please manually switch to that program. Per image, make any changes and click Output. When done, close Scantailor.'
+        t.save()
     except:
         t  = Temp(p='message',k='error', v='Something broke trying to open the Scantailor-cli (command line version) application. Command was "' + ' '.join(cmd))
         return "{'error': 'something broke during scantailor processing. sorry.'}"
     
     # run scantailor GUI
     try:
-        pass #call(bin + ppath) # open result
+        cmd = bin + ppath
+        call(cmd) # open result
+        t = Temp.objects.get(o='last')
+        t.k = int(t.k)+1
+        t.p = 'Scantailor-GUI completed successfully. I am now running ABBYY Finereader.'
+        t.save()
     except:
         t  = Temp(p='message',k='error', v='Something broke trying to open the scantailor application. Command was "' + ' '.join(bin + ppath))
         return "{'error': 'something broke trying to the open the scantailor application'}"
@@ -323,6 +342,78 @@ def run_batch(Temp, Page, p, path):
         opts = ['/send','acrobat']
         cmd  = bin_abbyy + flist_out + opts
         call(cmd, cwd=path_out)
+        t = Temp.objects.get(o='last')
+        t.k = int(t.k)+1
+        t.p = 'ABBYY Finereader completed succesfully. Enjoy your e-book!'
+        t.save()
     except:
         t  = Temp(p='message',k='error', v='I could not run ABBYY. The command was probably incorrect. It was "' + ' '.join(cmd))
         return '{"error": "I could not run ABBYY. The command was probably incorrect. It was "' + ' '.join(cmd) + '}'
+     
+    Temp.objects.all().delete()
+    t  = Temp(p='complete').save()
+    
+def batch_progress(proj, path, Temp, Page):
+    from PIL import Image
+
+    ''' return current status to the view '''
+    # which state?
+    try:
+        t = Temp.objects.get(o='last')
+    except:
+        try:
+            t = Temp.objects.get(o='start')
+        except:
+            try:
+                t = Temp.objects.get(o='cancel')
+                return ('')
+            except:
+                Temp(p='message', k='error', v='Not processing').save()
+                return serializers.serialize('json', Temp.objects.filter(p='message'))[1:-1] or '{}'
+
+    # get listing
+    listing  = os.listdir(path)
+    newtifs  = []
+
+    for item in listing:
+        i = item.split('.')
+        ext = i[-1] # -1 returns last part
+        if ext.lower() == 'tif':
+            url = os.path.join(path,item).replace('\\','/').split('/')
+            url.pop(0) # remove root drive, replace with /root -- see MEDIA_URL
+            url = '/root/' + '/'.join(url)
+            newtifs.append(url)
+
+    oldtifs = json.loads(t.o2) # unserialize from db
+    delta = list(set(newtifs) - set(oldtifs))
+
+    if delta:
+        total   = t.m
+        step    = len(newtifs)
+        percent = round((float(step)/float(total))*100)
+        tif_url = delta[-1]
+        tif_name= os.path.split(tif_url)[-1]
+        Temp.objects.filter(o='initial').delete()
+        Temp.objects.filter(o='last').delete()
+        
+        #create thumbnail
+        size = 300, 441
+        t_in = os.path.join(path,tif_name).replace('\\','/')
+        t_out= os.path.join(path,'cache', tif_name).replace('tif','jpg').replace('\\','/')
+        im   = Image.open(t_in)
+        im.thumbnail(size, Image.ANTIALIAS)
+        im.save(t_out, "JPEG")
+        j_out= t_out.split('/')
+        j_out.pop(0)
+        j_out= '/root/' + '/'.join(j_out)
+        j_in = j_out.replace('/scantailor/cache/','/')
+        
+        t = Temp(p='Current file: ' + tif_name, k=step, v=percent, m=total, o='last', o2=json.dumps(newtifs), o3=j_in, o4=j_out).save()
+        return serializers.serialize('json', Temp.objects.filter(o='last'))[1:-1] or '{}'
+    else:
+        if t.o == 'last':
+            return serializers.serialize('json', Temp.objects.filter(o='last'))[1:-1] or '{}'
+        elif t.o == 'start':
+            return serializers.serialize('json', Temp.objects.filter(o='start'))[1:-1] or '{}'
+        else:
+            return('{}')

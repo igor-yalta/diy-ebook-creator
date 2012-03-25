@@ -14,13 +14,14 @@
 {% block signpost %}
 <div id="signpost">
 <p class="p1">
-	<img width="240" height="296" src="/static/img/prereqs.png" alt="save button"> <span></span>
+	<img width="240" height="296" src="/static/img/prereqs.png" alt="save button"/> <span></span>
 	</p>
 <p class="p2">&nbsp;</p>
 </div>
 {% endblock %}
 
 {% block content %}
+
 <div id="dialog-confirm" class="hidden" title="{% trans 'Are you sure?' %}">
 	<p><span class="ui-icon ui-icon-alert" style="margin:0 7px 20px 0;"></span>{% trans 'Are you sure? I will now process via Scantailor then pass the results to ABBYY.' %}</p>
 </div>
@@ -31,6 +32,7 @@
 	  <div id="progressbar"></div>
 	  <br/>
 	  <p id="progressbar-details"></p>
+	  <p id="progressbar-images"></p>
 </div>
 
 

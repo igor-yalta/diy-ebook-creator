@@ -45,14 +45,18 @@ class Temp(models.Model):
     p = models.CharField(max_length=254,null=True, blank=True, help_text='parent thingy if needed') 
     k = models.CharField(max_length=254,null=True, blank=True, help_text='key thingy if needed') 
     v = models.CharField(max_length=254,null=True, blank=True, help_text='value thingy if needed') 
-    m = models.CharField(max_length=254,null=True, blank=True, help_text='misc thingy if needed') # misc
+    m = models.CharField(max_length=254,null=True, blank=True, help_text='misc thingy if needed')
+    o = models.CharField(max_length=254,null=True, blank=True, help_text='other thingy if needed') 
+    o2= models.CharField(max_length=254,null=True, blank=True, help_text='other thingy 2 if needed')
+    o3= models.CharField(max_length=254,null=True, blank=True, help_text='other thingy 3 if needed')
+    o4= models.CharField(max_length=254,null=True, blank=True, help_text='other thingy 4 if needed')
     def __unicode__(self):
-        return '%s %s %s %s' % (self.p, self.k, self.v, self.m)
+        return '%s %s %s %s %s %s %s %s' % (self.p, self.k, self.v, self.m, self.o, self.o2, self.o3, self.o4)
     class Admin(admin.ModelAdmin):
-        list_display = ('p', 'k', 'v', 'm')
-        list_filter = ('p', 'k')
+        list_display = ('p', 'k', 'v', 'm', 'o', 'o2', 'o3', 'o4')
+        list_filter = ('p', 'k', 'o', 'o2', 'o3', 'o4')
         ordering = ['v']
-        search_fields = ['p', 'k', 'v', 'm' ]
+        search_fields = ['p', 'k', 'v', 'm', 'o', 'o2', 'o3', 'o4']
     
 
 #https://docs.djangoproject.com/en/dev/ref/contrib/admin/

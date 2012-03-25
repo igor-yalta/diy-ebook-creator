@@ -3,11 +3,9 @@
 $.ajaxSetup({ cache: false });
 
 var int;
-var temp;
 function progress() {
 	$.getJSON('/import-cmd-get-progress/', function(data) {
-		temp = data;
-		console.log(data)
+		//console.log(data)
 		if (jQuery.isEmptyObject(data)) {
 			var percent = 0;
 		}

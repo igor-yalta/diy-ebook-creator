@@ -488,3 +488,12 @@ form table td input {
 	float: left;
 	width: 10%;
 }
+
+#progressbar-images {
+	text-align: center;
+}
+
+#progressbar-images img {
+	border: solid 1px black;
+	margin: 0 5px 0 0;
+}
