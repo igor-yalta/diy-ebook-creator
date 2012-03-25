@@ -157,9 +157,6 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
     tasks  = []
     inc_by = 2
     types = ('jpg', 'jpeg', 'tif', 'tiff', 'png', 'jp2')
-    angles = {'right': 270, 'left': 90, 'both':0}
-    orientation = angles[card]
-
     
     if card == 'left':
         n=1
@@ -207,10 +204,6 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
             t  = Temp(p=output,k=i,v=p,m=total).save()
             shutil.copy2(spath, dpath)
          
-            #rotate   
-            im = Image.open(dpath)
-            im.rotate(orientation).save(dpath)
-        
             if i == total:
                 sleep(1) # allows progress thread to see 100 percent complete
             i += 1
@@ -303,15 +296,16 @@ def run_batch(Temp, Page, p, path):
     step     = 0
     t         = Temp(p=msg, k=step, v=percent, m=total, o='start', o2=json.dumps([None])).save()
 
-    #delete this
-    #pagecount = len(Page.objects.filter(project=p).order_by('renamed'))
-    #taskcount = len(['Scantailor-CLI', 'Scantailor Manual Adjustments', 'Send to ABBYY Finereader'])
-    #adjustments = {'left': 2, 'right': 2, 'both': 0}
-    #adjust = adjustments[card]
-    #total = pagecount - adjust + taskcount 
-    #msg = 'Please wait. Scantailor-cli takes a little while to generate the first TIFs. Then, it creates a bunch at once, followed by more regular output.' 
-    #t  = Temp(p=msg, k=0, v=0, m=total, o='start', o2=json.dumps([None])).save()
-                
+    #rotate
+    angles = {'right': 270, 'left': 90, 'both':0}
+    for pg in pgs:
+        if pg.status != 'rotate':
+            ip = os.path.join(path,pg.renamed).replace('\\','/')
+            im = Image.open(ip)
+            im.rotate(angles[pg.card]).save(ip)
+            pg.status='rotate'
+            pg.save()
+                          
     # run scantailor_cli
     try:
         cmd = bin_cli + opts + flist_in + [path_out]
@@ -319,6 +313,7 @@ def run_batch(Temp, Page, p, path):
         sleep(4) # without sleeping, below msg won't appear. why?
         t = Temp.objects.get(o='last')
         t.k = int(t.k)+1
+        t.v = round((float(t.k)/float(t.m))*100) # percent
         t.p = 'Scantailor-CLI completed successfully. I opened Scantailor. Please manually switch to that program. Per image, make any changes and click Output. When done, close Scantailor.'
         t.save()
     except:
@@ -331,6 +326,7 @@ def run_batch(Temp, Page, p, path):
         call(cmd) # open result
         t = Temp.objects.get(o='last')
         t.k = int(t.k)+1
+        t.v = round((float(t.k)/float(t.m))*100) # percent
         t.p = 'Scantailor-GUI completed successfully. I am now running ABBYY Finereader.'
         t.save()
     except:
@@ -344,13 +340,14 @@ def run_batch(Temp, Page, p, path):
         call(cmd, cwd=path_out)
         t = Temp.objects.get(o='last')
         t.k = int(t.k)+1
+        t.v = round((float(t.k)/float(t.m))*100) # percent
         t.p = 'ABBYY Finereader completed succesfully. Enjoy your e-book!'
         t.save()
     except:
         t  = Temp(p='message',k='error', v='I could not run ABBYY. The command was probably incorrect. It was "' + ' '.join(cmd))
         return '{"error": "I could not run ABBYY. The command was probably incorrect. It was "' + ' '.join(cmd) + '}'
      
-    Temp.objects.all().delete()
+    #Temp.objects.all().delete()
     t  = Temp(p='complete').save()
     
 def batch_progress(proj, path, Temp, Page):
