@@ -9,14 +9,15 @@ class Project(models.Model):
     book_title = models.CharField(max_length=254, null=True, blank=True)
     book_website = models.URLField(null=True, blank=True)
     date_created = models.DateTimeField(null=True, blank=True, help_text="the date this project was created")
-    total_pages = models.CharField(max_length=5,null=True, blank=True, help_text='total number of pages') 
+    total_pages = models.CharField(max_length=5,null=True, blank=True, help_text='total number of pages')
+    color_mode = models.CharField(max_length=50,null=True, blank=True, help_text='colors - e.g black and white, grayscale') 
     def __unicode__(self):
-        return '%s %s %s %s %s %s %s' % (self.id, self.title, self.path, self.book_isbn, self.title, self.book_website, self.date_created)
+        return '%s %s %s %s %s %s %s %s' % (self.id, self.title, self.path, self.book_isbn, self.title, self.book_website, self.date_created, self.color_mode)
     class Admin(admin.ModelAdmin):
-        list_display = ('title', 'date_created', 'path', 'book_isbn')
-        list_filter = ('title', 'path')
+        list_display = ('title', 'date_created', 'path', 'total_pages', 'color_mode', 'book_isbn')
+        list_filter = ('title', 'path', 'color_mode')
         ordering = ['title']
-        search_fields = ['title']
+        search_fields = ['title','color_mode']
     class Meta:
         ordering = ['title']
     

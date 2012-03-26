@@ -32,7 +32,6 @@ def mountpoint(request):
     
     return render_to_response(vars['template'], {'vars': vars})
 
-
 def project_details(request):
     vars = {}
     vars['template'] = 'content/project-details.html'
@@ -41,20 +40,22 @@ def project_details(request):
     vars['redirect'] = vars['next'] 
     vars['path'] = request.session.get('path',djos.project_path())
     #vars['debug']    = True
-    form = ProjectForm(initial={'date_created': datetime.datetime.now(), 'path': vars['path']})
+    form = ProjectForm(initial={'path': vars['path']})
     
     # submitting
     if request.method == 'POST':
         prev_title = request.session.get('title', False)
         curr_title = request.POST.get('title')
-        if prev_title: # prev session title exists
-            if prev_title==curr_title:
-                p = Project.objects.get(title=curr_title)
-                form = ProjectForm(request.POST, instance=p) # load form (from db)
-            else:
-                form = ProjectForm(request.POST) # create form
-        elif not prev_title: # new session title
-            form = ProjectForm(request.POST)
+        
+        # this title already in db?
+        try: # yes
+            p = Project.objects.get(title=curr_title)
+            form = ProjectForm(request.POST, instance=p) # load form (from db)
+        except: #no
+            post2 = request.POST.copy() # immutable so copy before changing
+            post2['date_created']=datetime.datetime.now()
+            form = ProjectForm(post2) # create form
+
         if form.is_valid():  
             form.save()
             request.session['title'] = form.cleaned_data['title']

@@ -268,7 +268,7 @@ def run_batch(Temp, Page, p, path):
     opts.append('--layout=1')
     opts.append('--dpi=400')
     opts.append('--output-dpi=600')
-    opts.append('--color-mode=color_grayscale')
+    opts.append('--color-mode=' + p.color_mode)
     opts.append('--white-margins=true')
     opts.append('--normalize-illumination=true')
     opts.append('--threshold=1')
@@ -298,7 +298,7 @@ def run_batch(Temp, Page, p, path):
     #command = ' '.join(flist_in).replace('\\','/')
     
     # prepare
-    msg      = 'Please wait. Scantailor-cli may take a long time before generating the first TIFs. This is normal.'
+    msg      = 'Please wait. Scantailor-cli may take a long time before generating the first TIFs. This is normal. When done, Scantailor will open. Once that happens, make any adjustments, clicking Output per adjusted image, then close Scantailor, saving your changes. ABBYY Finereader with then start.'
     total    = len(flist_in) + 3
     percent  = 0 
     step     = 0
