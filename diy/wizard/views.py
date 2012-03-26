@@ -44,14 +44,18 @@ def project_details(request):
     form = ProjectForm(initial={'date_created': datetime.datetime.now(), 'path': vars['path']})
     
     # submitting
-    if request.method == 'POST': 
-        sess = request.session.get('title', False)
-        if sess: # old
-            p = Project.objects.get(title=request.session['title'])
-            form = ProjectForm(request.POST, instance=p)
-        elif not sess: # new
+    if request.method == 'POST':
+        prev_title = request.session.get('title', False)
+        curr_title = request.POST.get('title')
+        if prev_title: # prev session title exists
+            if prev_title==curr_title:
+                p = Project.objects.get(title=curr_title)
+                form = ProjectForm(request.POST, instance=p) # load form (from db)
+            else:
+                form = ProjectForm(request.POST) # create form
+        elif not prev_title: # new session title
             form = ProjectForm(request.POST)
-        if form.is_valid(): # new and old
+        if form.is_valid():  
             form.save()
             request.session['title'] = form.cleaned_data['title']
             request.session['path'] = form.cleaned_data['path']
@@ -95,7 +99,7 @@ def import_cmd(request):
     src              = src.replace('%3A',':').replace('%5C','\\').replace('%2F','/')
     dst              = request.session['fullpath']
     card             = request.GET['card']
-    title            = title=request.session['title']
+    title            = request.session['title']
     p                = Project.objects.get(title=request.session['title'])
     vars             = {}
     vars['template'] = 'content/import-cmd.html'

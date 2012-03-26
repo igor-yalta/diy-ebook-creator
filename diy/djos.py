@@ -260,7 +260,7 @@ def run_batch(Temp, Page, p, path):
     opts.append('--layout=1')
     opts.append('--dpi=400')
     opts.append('--output-dpi=600')
-    opts.append('--color-mode=mixed')
+    opts.append('--color-mode=color_grayscale')
     opts.append('--white-margins=true')
     opts.append('--normalize-illumination=true')
     opts.append('--threshold=1')
@@ -365,6 +365,7 @@ def batch_progress(proj, path, Temp, Page):
                 t = Temp.objects.get(o='cancel')
                 return ('')
             except:
+                Temp.objects.filter(p='message').delete()
                 Temp(p='message', k='error', v='Not processing').save()
                 return serializers.serialize('json', Temp.objects.filter(p='message'))[1:-1] or '{}'
 
@@ -393,7 +394,14 @@ def batch_progress(proj, path, Temp, Page):
         Temp.objects.filter(o='initial').delete()
         Temp.objects.filter(o='last').delete()
         
-        #create thumbnail
+        #create thumbnail dir
+        cdir = os.path.join(path, 'cache')
+        if os.path.isdir(cdir):
+            pass # st-cli in mixed mode
+        else:
+            os.makedirs(cdir, 0777) # st-cli in color_grayscale
+
+        #create thumbnails
         size = 300, 441
         t_in = os.path.join(path,tif_name).replace('\\','/')
         t_out= os.path.join(path,'cache', tif_name).replace('tif','jpg').replace('\\','/')
