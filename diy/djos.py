@@ -77,7 +77,6 @@ def get_apps():
     
     return result
 
-
 def get_drives():
     '''     
     http://stackoverflow.com/questions/827371/is-there-a-way-to-list-all-the-available-drive-letters-in-python
@@ -188,8 +187,17 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
         t  = Temp(p='message',k='error', v='No images found!').save()
         return '{"error":"No images found!"}'
 
-    # excecute commands, show progress
-    total = len(tasks) 
+    # total pages
+    total = len(tasks)
+    
+    # update total pages in db    
+    if card=='both':
+        p.total_pages=(total*2)   # count all images on 1 camera rigs
+    else:
+        p.total_pages=(total*2)-2 # count all but first and last images in 2 camera rigs 
+    p.save() # store count in total to db
+
+    # execute commands, show progress
     i     = 1
     for spath, dpath, output, log in tasks:
         # cancelled?
@@ -199,9 +207,9 @@ def import_pages(p, Page, Temp, src, dst, card='left'):
             t  = Temp(p='message',v='Cancelled!').save()
             return '{"error":"Cancelled"}'
         try:
-            t = Temp.objects.all().delete()            
-            p  = round((float(i)/float(total))*100) # percent complete
-            t  = Temp(p=output,k=i,v=p,m=total).save()
+            t        = Temp.objects.all().delete()            
+            percent  = format(float(i)/float(total)*100,'.2f')[0:-3] # percent complete - don't use round()!
+            Temp(p=output,k=i,v=percent,m=total).save()
             shutil.copy2(spath, dpath)
          
             if i == total:
@@ -313,7 +321,7 @@ def run_batch(Temp, Page, p, path):
         sleep(4) # without sleeping, below msg won't appear. why?
         t = Temp.objects.get(o='last')
         t.k = int(t.k)+1
-        t.v = round((float(t.k)/float(t.m))*100) # percent
+        t.v = format(float(t.k)/float(t.m)*100,'.2f')[0:-3] # percent
         t.p = 'Scantailor-CLI completed successfully. I opened Scantailor. Please manually switch to that program. Per image, make any changes and click Output. When done, close Scantailor.'
         t.save()
     except:
@@ -326,7 +334,7 @@ def run_batch(Temp, Page, p, path):
         call(cmd) # open result
         t = Temp.objects.get(o='last')
         t.k = int(t.k)+1
-        t.v = round((float(t.k)/float(t.m))*100) # percent
+        t.v = format(float(t.k)/float(t.m)*100,'.2f')[0:-3] # percent
         t.p = 'Scantailor-GUI completed successfully. I am now running ABBYY Finereader.'
         t.save()
     except:
@@ -340,7 +348,7 @@ def run_batch(Temp, Page, p, path):
         call(cmd, cwd=path_out)
         t = Temp.objects.get(o='last')
         t.k = int(t.k)+1
-        t.v = round((float(t.k)/float(t.m))*100) # percent
+        t.v = format(float(t.k)/float(t.m)*100,'.2f')[0:-3] # percent
         t.p = 'ABBYY Finereader completed succesfully. Enjoy your e-book!'
         t.save()
     except:
@@ -388,7 +396,7 @@ def batch_progress(proj, path, Temp, Page):
     if delta:
         total   = t.m
         step    = len(newtifs)
-        percent = round((float(step)/float(total))*100)
+        percent = format(float(step)/float(total)*100,'.2f')[0:-3]
         tif_url = delta[-1]
         tif_name= os.path.split(tif_url)[-1]
         Temp.objects.filter(o='initial').delete()
