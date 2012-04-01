@@ -298,12 +298,20 @@ def run_batch(Temp, Page, p, path):
     #command = ' '.join(flist_in).replace('\\','/')
     
     # prepare
-    msg      = 'Please wait. Scantailor-cli may take a long time before generating the first TIFs. This is normal. When done, Scantailor will open. Once that happens, make any adjustments, clicking Output per adjusted image, then close Scantailor, saving your changes. ABBYY Finereader with then start.'
-    total    = len(flist_in) + 3
+    if p.auto_mode == 'manual':
+        auto_txt = 'When done, Scantailor will open. Once that happens, make any adjustments, clicking Output per adjusted image, then close Scantailor, saving your changes.'
+    else:
+        auto_txt = ''
+        
+    msg      = 'Please wait. Scantailor-cli may take a long time before generating the first TIFs. This is normal. ' + auto_txt + ' ABBYY Finereader will start afterwards.'
+    tasks    = ['scantailor_cli','abbyy']
+    if p.auto_mode=='manual':
+        tasks.append('scantailor_gui')
+    total    = len(flist_in) + len(tasks)
     percent  = 0 
     step     = 0
     t         = Temp(p=msg, k=step, v=percent, m=total, o='start', o2=json.dumps([None])).save()
-
+    
     #rotate
     angles = {'right': 270, 'left': 90, 'both':0}
     for pg in pgs:
@@ -322,24 +330,29 @@ def run_batch(Temp, Page, p, path):
         t = Temp.objects.get(o='last')
         t.k = int(t.k)+1
         t.v = format(float(t.k)/float(t.m)*100,'.2f')[0:-3] # percent
-        t.p = 'Scantailor-CLI completed successfully. I opened Scantailor. Please manually switch to that program. Per image, make any changes and click Output. When done, close Scantailor.'
+        if p.auto_mode=='manual':
+            auto_txt = 'I opened Scantailor. Please manually switch to that program. Per image, make any changes and click Output. When done, close Scantailor.'
+        else:
+            auto_txt = ''
+        t.p = 'Scantailor-CLI completed successfully. ' + auto_txt
         t.save()
     except:
         t  = Temp(p='message',k='error', v='Something broke trying to open the Scantailor-cli (command line version) application. Command was "' + ' '.join(cmd))
-        return "{'error': 'something broke during scantailor processing. sorry.'}"
+        return "{'error': 'something broke during scantailor-cli processing. sorry.'}"
     
     # run scantailor GUI
-    try:
-        cmd = bin + ppath
-        call(cmd) # open result
-        t = Temp.objects.get(o='last')
-        t.k = int(t.k)+1
-        t.v = format(float(t.k)/float(t.m)*100,'.2f')[0:-3] # percent
-        t.p = 'Scantailor-GUI completed successfully. I am now running ABBYY Finereader.'
-        t.save()
-    except:
-        t  = Temp(p='message',k='error', v='Something broke trying to open the scantailor application. Command was "' + ' '.join(bin + ppath))
-        return "{'error': 'something broke trying to the open the scantailor application'}"
+    if p.auto_mode=='manual':
+        try:
+            cmd = bin + ppath
+            call(cmd) # open result
+            t = Temp.objects.get(o='last')
+            t.k = int(t.k)+1
+            t.v = format(float(t.k)/float(t.m)*100,'.2f')[0:-3] # percent
+            t.p = 'Scantailor-GUI completed successfully. I am now running ABBYY Finereader.'
+            t.save()
+        except:
+            t  = Temp(p='message',k='error', v='Something broke trying to open the scantailor application. Command was "' + ' '.join(bin + ppath))
+            return "{'error': 'something broke trying to the open the scantailor application'}"
 
     # now abbyy
     try:

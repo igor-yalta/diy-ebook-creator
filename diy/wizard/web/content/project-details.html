@@ -30,7 +30,7 @@
 </div>
 
 <h3><span>{% trans 'Project details' %}</span></h3>
-<p>{% trans 'What is the name of this project? This project (e.g. German Grammar) will be stored inside the location.' %}</p>
+<p>{% trans 'Please enter the name of this project (e.g. German Grammar) below. Your images, thumbnails, and Scantailor project file will be stored in Location under a folder called Title (e.g. German Grammar). The Location folder cannot accept Windows UNC paths ' %} \\server\share {% trans ' currently. Also, to see the automatic preview thumbnails, the Location must be on the same hard drive (eg C:\) as this program.' %}</p>
 
 	<form id="jqueryForm" method="post" action="">
 		<label for="title">{% trans ' Title' %}</label>
@@ -41,6 +41,9 @@
 		
 		<label for="colors">{% trans 'Colors' %}</label>
 		<span class="inputText">{{ form.color_mode }} <span class="error"> {{ form.path.color_mode|striptags }} </span></span>
+
+		<label for="automation">{% trans 'Mode' %}</label>
+		<span class="inputText">{{ form.auto_mode }} <span class="error"> {{ form.path.auto_mode|striptags }} </span></span>
 		
 		<div class="hidden"><label for="location">{% trans 'Date Created' %}</label><span class="inputText">{{ form.date_created }}</span></div>
 	

@@ -10,14 +10,15 @@ class Project(models.Model):
     book_website = models.URLField(null=True, blank=True)
     date_created = models.DateTimeField(null=True, blank=True, help_text="the date this project was created")
     total_pages = models.CharField(max_length=5,null=True, blank=True, help_text='total number of pages')
-    color_mode = models.CharField(max_length=50,null=True, blank=True, help_text='colors - e.g black and white, grayscale') 
+    color_mode = models.CharField(max_length=50,null=True, blank=True, help_text='colors - e.g black and white, grayscale')
+    auto_mode = models.CharField(max_length=50,null=True, blank=True, help_text='e.g. -- auto pdf creation or st first?')
     def __unicode__(self):
-        return '%s %s %s %s %s %s %s %s' % (self.id, self.title, self.path, self.book_isbn, self.title, self.book_website, self.date_created, self.color_mode)
+        return '%s %s %s %s %s %s %s %s %s' % (self.id, self.title, self.path, self.book_isbn, self.title, self.book_website, self.date_created, self.color_mode, self.auto_mode)
     class Admin(admin.ModelAdmin):
-        list_display = ('title', 'date_created', 'path', 'total_pages', 'color_mode', 'book_isbn')
-        list_filter = ('title', 'path', 'color_mode')
+        list_display = ('title', 'date_created', 'path', 'total_pages', 'color_mode', 'book_isbn', 'auto_mode')
+        list_filter = ('title', 'path', 'color_mode', 'auto_mode')
         ordering = ['title']
-        search_fields = ['title','color_mode']
+        search_fields = ['title','color_mode', 'auto_mode']
     class Meta:
         ordering = ['title']
     

@@ -7,13 +7,19 @@ import djos
 class ProjectForm(ModelForm):
     class Meta:
         model = Project
-        fields = ('title', 'date_created', 'path', 'color_mode')
+        fields = ('title', 'date_created', 'path', 'color_mode', 'auto_mode')
         COLORS = (
                    ('mixed', 'Mixed (i.e. some color or grayscale, some black and white)'),
                    ('color_grayscale', 'Color / Grayscale'),
                    ('black_and_white', 'Black and White only'),
                    )
-        widgets = {'color_mode': Select(choices=COLORS)}
+        AUTO   = (
+                  ('manual', 'Manual: Tweak pages with Scantailor prior to creating PDF'),
+                  ('auto', 'Auto: Create PDF without tweaking'),
+                  )
+        widgets = {'color_mode': Select(choices=COLORS),
+                   'auto_mode' : Select(choices=AUTO),
+                   }
         
     def clean_path(self):
         p = self.cleaned_data.get('path', '')
