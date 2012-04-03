@@ -12,13 +12,20 @@ class Project(models.Model):
     total_pages = models.CharField(max_length=5,null=True, blank=True, help_text='total number of pages')
     color_mode = models.CharField(max_length=50,null=True, blank=True, help_text='colors - e.g black and white, grayscale')
     auto_mode = models.CharField(max_length=50,null=True, blank=True, help_text='e.g. -- auto pdf creation or st first?')
+    language1 = models.CharField(max_length=50,null=True, blank=True, help_text='recognition language 1')
+    language2 = models.CharField(max_length=50,null=True, blank=True, help_text='recognition language 2')
+    language3 = models.CharField(max_length=50,null=True, blank=True, help_text='recognition language 3')
+    
     def __unicode__(self):
-        return '%s %s %s %s %s %s %s %s %s' % (self.id, self.title, self.path, self.book_isbn, self.title, self.book_website, self.date_created, self.color_mode, self.auto_mode)
+        return '%s %s %s %s %s %s %s %s %s %s %s %s' % (self.id, self.title, self.path, self.book_isbn, self.title, 
+                                                        self.book_website, self.date_created, self.color_mode, 
+                                                        self.auto_mode, self.language1, self.language2, self.language3)
     class Admin(admin.ModelAdmin):
-        list_display = ('title', 'date_created', 'path', 'total_pages', 'color_mode', 'book_isbn', 'auto_mode')
-        list_filter = ('title', 'path', 'color_mode', 'auto_mode')
+        list_display = ('title', 'date_created', 'path', 'total_pages', 'color_mode', 
+                        'book_isbn', 'auto_mode', 'language1', 'language2', 'language3')
+        list_filter = ('title', 'path', 'color_mode', 'auto_mode', 'language1','language2', 'language3')
         ordering = ['title']
-        search_fields = ['title','color_mode', 'auto_mode']
+        search_fields = ['title','color_mode', 'auto_mode', 'language1','language2', 'language3']
     class Meta:
         ordering = ['title']
     
@@ -38,7 +45,7 @@ class Page(models.Model):
         ordering = ['xfer_date']
         search_fields = ['renamed']
 
-class Logs(models.Model):
+class Log(models.Model):
     entry = models.CharField(max_length=254)
     class Admin(admin.ModelAdmin):
         pass
@@ -65,5 +72,5 @@ class Temp(models.Model):
 #register these items for the /admin GUI
 admin.site.register(Project, Project.Admin)
 admin.site.register(Page, Page.Admin)
-admin.site.register(Logs, Logs.Admin)
+admin.site.register(Log, Log.Admin)
 admin.site.register(Temp, Temp.Admin)

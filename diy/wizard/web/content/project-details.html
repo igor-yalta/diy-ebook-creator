@@ -40,11 +40,20 @@
 		<span class="inputText">{{ form.path }} <span class="error"> {{ form.path.errors|striptags }} </span></span>
 		
 		<label for="colors">{% trans 'Colors' %}</label>
-		<span class="inputText">{{ form.color_mode }} <span class="error"> {{ form.path.color_mode|striptags }} </span></span>
+		<span class="inputText">{{ form.color_mode }} <span class="error"> {{ form.color_mode.errors|striptags }} </span></span>
 
 		<label for="automation">{% trans 'Mode' %}</label>
-		<span class="inputText">{{ form.auto_mode }} <span class="error"> {{ form.path.auto_mode|striptags }} </span></span>
+		<span class="inputText">{{ form.auto_mode }} <span class="error"> {{ form.auto_mode.errors|striptags }} </span></span>
 		
+		<label for="language1">{% trans 'Language 1' %}</label>
+		<span class="inputText">{{ form.language1 }} <span class="error"> {{ form.language1.errors|striptags }} </span></span>
+
+		<label for="language2">{% trans 'Language 2' %}</label>
+		<span class="inputText">{{ form.language2 }} <span class="error"> {{ form.language2.errors|striptags }} </span></span>
+
+		<label for="language3">{% trans 'Language 3' %}</label>
+		<span class="inputText">{{ form.language3 }} <span class="error"> {{ form.language3.errors|striptags }} </span></span>
+
 		<div class="hidden"><label for="location">{% trans 'Date Created' %}</label><span class="inputText">{{ form.date_created }}</span></div>
 	
 		<input class="hidden" type="submit" value="{% trans 'Submit' %}"/>

@@ -40,7 +40,11 @@ def project_details(request):
     vars['redirect'] = vars['next'] 
     vars['path'] = request.session.get('path',djos.project_path())
     #vars['debug']    = True
-    form = ProjectForm(initial={'path': vars['path']})
+    form = ProjectForm(initial={'path': vars['path'], 
+                                'language1': 'English',
+                                'language2': 'English',
+                                'language3': 'English'}
+                       )
     
     # submitting
     if request.method == 'POST':

@@ -298,15 +298,15 @@ def run_batch(Temp, Page, p, path):
     #command = ' '.join(flist_in).replace('\\','/')
     
     # prepare
+    tasks    = ['scantailor_cli','abbyy']
+    
     if p.auto_mode == 'manual':
         auto_txt = 'When done, Scantailor will open. Once that happens, make any adjustments, clicking Output per adjusted image, then close Scantailor, saving your changes.'
+        tasks.insert(1,'scantailor_gui')
     else:
         auto_txt = ''
-        
+
     msg      = 'Please wait. Scantailor-cli may take a long time before generating the first TIFs. This is normal. ' + auto_txt + ' ABBYY Finereader will start afterwards.'
-    tasks    = ['scantailor_cli','abbyy']
-    if p.auto_mode=='manual':
-        tasks.append('scantailor_gui')
     total    = len(flist_in) + len(tasks)
     percent  = 0 
     step     = 0
@@ -356,8 +356,14 @@ def run_batch(Temp, Page, p, path):
 
     # now abbyy
     try:
+        lang = ['/lang']
+        lng1 = [p.language1]
+        lng2 = [p.language2]
+        lng3 = [p.language3]
+        langs= list(set(lang + lng1 + lng2 + lng3))
+        langs.sort()
         opts = ['/send','acrobat']
-        cmd  = bin_abbyy + flist_out + opts
+        cmd  = bin_abbyy + flist_out + langs + opts
         call(cmd, cwd=path_out)
         t = Temp.objects.get(o='last')
         t.k = int(t.k)+1
