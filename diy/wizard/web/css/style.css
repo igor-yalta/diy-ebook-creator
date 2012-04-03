@@ -478,14 +478,14 @@ form table td input {
 }
 
 .inputText input, .inputText select {
-  width: 60%;
+  width: 70%;
   margin: 0 0 0 10px;
 }
 
 #jqueryForm label {
 	display: block;
 	float: left;
-	width: 10%;
+	width: 20%;
 }
 
 #progressbar-images {
