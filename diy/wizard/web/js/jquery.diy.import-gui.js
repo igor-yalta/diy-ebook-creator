@@ -15,6 +15,7 @@ function progress() {
 			var percent = Number(data.fields.v);
 
 			$("#progressbar").progressbar({value: percent});
+			
 			if (data.fields.p =='message')
 				$('#progressbar-details').html(data.fields.v)
 			else

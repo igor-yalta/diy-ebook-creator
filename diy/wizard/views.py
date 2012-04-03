@@ -13,9 +13,11 @@ from django.utils import simplejson
 
 def welcome(request):
     vars = {}
+    apps = djos.get_apps()
     vars['template']   = 'content/welcome.html'
     vars['next']       = 'project-details'
-    vars['scantailor'] = djos.is_scantailor()
+    vars['scantailor'] = apps.get('scantailor',False)
+    vars['abbyy']      = apps.get('abbyy', False)
     return render_to_response(vars['template'], {'vars': vars})
 
 def mountpoint(request):

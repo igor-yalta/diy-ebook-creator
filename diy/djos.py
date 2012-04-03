@@ -9,31 +9,6 @@ from subprocess import call
 from PIL import Image
 import json
 
-def is_scantailor():
-    ''' 
-    this crude function checks to see if scantailor is installed
-    '''
-    
-    # can somebody fill in non-windows paths? 3-2-2012
-    result = False
-    
-    if sys.platform == 'win32': #Windows
-        dirs = [
-               'c:/Program Files/Scan Tailor/',
-               'c:/Program Files (x86)/Scan Tailor/',
-               ]
-    elif sys.platform == 'darwin': # OsX
-        dirs = ['',]
-    elif sys.platform == 'linux2': #Ubuntu Linux
-        dirs = ['',]
-    
-    #if one of these paths exists, assume scan tailor is installed
-    for dir in dirs:
-        if os.path.isdir(dir):
-            result = True
-            
-    return result
-
 def get_apps():
     ''' 
     this admittedly crude function checks and returns paths for popular diy book scanner software
@@ -229,21 +204,21 @@ def run_batch(Temp, Page, p, path):
     try:
         bin = [get_apps()['scantailor']]
     except:
-        t  = Temp(p='message',k='error', v='Scantailor could not be found. Is it installed? Sorry, only Windows is supported currently. Please see the forums (link below) to help us fix this!').save()
+        t  = Temp(p='message',k='error', o='except', v='Scantailor could not be found. Is it installed? Sorry, only Windows is supported currently. Please see the forums (link below) to help us fix this!').save()
         return '{"error": "scantailor could not be found. Is it installed?"}'
     
     # scantailor-cli installed?
     try:    
         bin_cli = [get_apps()['scantailor-cli']]
     except:
-        t  = Temp(p='message',k='error', v='Scantailor-cli (command line version) could not be found. Is it installed? Sorry, only Windows is supported currently. Please see the forums (link below) to help us fix this!').save()
+        t  = Temp(p='message',k='error', o='except', v='Scantailor-cli (command line version) could not be found. Is it installed? Sorry, only Windows is supported currently. Please see the forums (link below) to help us fix this!').save()
         return '{"error": "scantailor-cli (command line version) could not be found. Is it installed?"}'
     
     # abbyy installed?
     try:
         bin_abbyy = [get_apps()['abbyy']]
     except:
-        t  = Temp(p='message',k='error', v='ABBYY FineReader could not be found. Is it installed? Sorry, only Windows is supported currently. Please see the forums (link below) to help us fix this!').save()
+        t  = Temp(p='message',k='error', o='except', v='ABBYY FineReader could not be found. Is it installed? Sorry, only Windows is supported currently. Please see the forums (link below) to help us fix this!').save()
         return '{"error": "ABBYY FineReader could not be found. Is it installed?"}' 
     
     path_in = path
@@ -260,7 +235,7 @@ def run_batch(Temp, Page, p, path):
         try:
             os.makedirs(path_out, 0777)
         except:
-            t  = Temp(p='message', k='error', v='I could not create the directory you requested. Does it already exist? That directory was: ' + path_out + '. Please try again.').save()
+            t  = Temp(p='message', k='error', o='except', v='I could not create the directory you requested. Does it already exist? That directory was: ' + path_out + '. Please try again.').save()
             return '{"error": "I could not create the directory you requested. Does it already exist? Please try again"}'
     
     # scantailor options
@@ -337,7 +312,7 @@ def run_batch(Temp, Page, p, path):
         t.p = 'Scantailor-CLI completed successfully. ' + auto_txt
         t.save()
     except:
-        t  = Temp(p='message',k='error', v='Something broke trying to open the Scantailor-cli (command line version) application. Command was "' + ' '.join(cmd))
+        t  = Temp(p='message',o='except',k='error', v='Something broke trying to open the Scantailor-cli (command line version) application. Command was "' + ' '.join(cmd))
         return "{'error': 'something broke during scantailor-cli processing. sorry.'}"
     
     # run scantailor GUI
@@ -351,7 +326,7 @@ def run_batch(Temp, Page, p, path):
             t.p = 'Scantailor-GUI completed successfully. I am now running ABBYY Finereader.'
             t.save()
         except:
-            t  = Temp(p='message',k='error', v='Something broke trying to open the scantailor application. Command was "' + ' '.join(bin + ppath))
+            t  = Temp(p='message',o='except',k='error',v='Something broke trying to open the scantailor application. Command was "' + ' '.join(bin + ppath))
             return "{'error': 'something broke trying to the open the scantailor application'}"
 
     # now abbyy
@@ -371,7 +346,7 @@ def run_batch(Temp, Page, p, path):
         t.p = 'ABBYY Finereader completed succesfully. Enjoy your e-book!'
         t.save()
     except:
-        t  = Temp(p='message',k='error', v='I could not run ABBYY. The command was probably incorrect. It was "' + ' '.join(cmd))
+        t  = Temp(p='message',o='except', k='error', v='I could not run ABBYY. The command was probably incorrect. It was "' + ' '.join(cmd))
         return '{"error": "I could not run ABBYY. The command was probably incorrect. It was "' + ' '.join(cmd) + '}'
      
     #Temp.objects.all().delete()
@@ -392,9 +367,13 @@ def batch_progress(proj, path, Temp, Page):
                 t = Temp.objects.get(o='cancel')
                 return ('')
             except:
-                Temp.objects.filter(p='message').delete()
-                Temp(p='message', k='error', v='Not processing').save()
-                return serializers.serialize('json', Temp.objects.filter(p='message'))[1:-1] or '{}'
+                try:
+                    t = Temp.objects.get(o='except')
+                    return serializers.serialize('json', Temp.objects.filter(o='except'))[1:-1] or '{}'
+                except:
+                    Temp.objects.filter(p='message').delete()
+                    Temp(p='message', k='error', v='Error. Not processing. Review software requirements on the Welcome page. Do you have ABBYY FineReader installed? What about ScanTailor?').save()
+                    return serializers.serialize('json', Temp.objects.filter(p='message'))[1:-1] or '{}'
 
     # get listing
     listing  = os.listdir(path)

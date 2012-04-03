@@ -14,9 +14,11 @@ function progress() {
 
 			//$('div.ui-progressbar-value').css({'background-image': 'url(/static/img/pbar-ani.gif)'})
 			$("#progressbar").progressbar({value: percent});
-			if (msg =='message')
+			
+			if (msg =='message') {
 				$('#progressbar-details').html(data.fields.v);
-			else
+			}
+			else {
 				var step    = Number(data.fields.k);
 				var total   = Number(data.fields.m);
 				var before  = data.fields.o3;
@@ -33,7 +35,8 @@ function progress() {
 				//var img_url2= data.fileds.o3.replace('tif','jpg')
 
 				$('#progressbar-details').html('Step ' + step + ' / ' + total + ' ( ' + percent + '% ) ' + '<br/><br/>' + msg + '</p>');
-				$('#progressbar-images').html(pbi); 
+				$('#progressbar-images').html(pbi);
+			}
 			if (percent == 100) {
 				percent = 0
 				clearInterval(int)
